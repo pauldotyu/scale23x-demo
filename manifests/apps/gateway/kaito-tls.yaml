@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kaito-tls
+spec:
+  secretName: kaito-tls
+  privateKey:
+    rotationPolicy: Always
+  commonName: chat.aks.rocks
+  dnsNames:
+    - chat.aks.rocks
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer

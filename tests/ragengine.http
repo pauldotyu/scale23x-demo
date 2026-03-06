@@ -1,0 +1,77 @@
+### Get the indexes
+GET /indexes
+Host: localhost:5002
+
+### Create an index
+POST /index
+Host: localhost:5002
+Content-Type: application/json
+
+< ../src/sched/output/schedule_index.json
+
+### Persist the index
+POST /persist/schedule_index
+Host: localhost:5002
+
+### Load the index
+POST /load/schedule_index
+Host: localhost:5002
+
+### Get the documents the index
+GET /indexes/schedule_index/documents
+Host: localhost:5002
+
+### Delete index
+DELETE /indexes/schedule_index
+Host: localhost:5002
+
+### Query the rag engine
+POST /v1/chat/completions
+Host: localhost:5002
+Content-Type: application/json
+
+{
+  "model": "gemma-3-27b-instruct",
+  "index_name": "schedule_index",
+  "max_tokens": 2048,
+  "messages": [
+    {
+      "role": "user", 
+      "content": "Will there be any sessions on KAITO?"
+    }
+  ]
+}
+
+### Test a ragengine with a gemma-3-27b-instruct workspace behind istio gateway routing
+POST /rag/chat/completions
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "model": "gemma-3-27b-instruct",
+  "index_name": "schedule_index",
+  "max_tokens": 2048,
+  "messages": [
+    {
+      "role": "user", 
+      "content": "Will there be any sessions on KAITO?"
+    }
+  ]
+}
+
+### Test a ragengine with a gemma-3-27b-instruct workspace behind istio gateway routing
+POST /rag/chat/completions
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "model": "gemma-3-27b-instruct",
+  "index_name": "schedule_index",
+  "max_tokens": 2048,
+  "messages": [
+    {
+      "role": "user", 
+      "content": "Can you provide the URL to the session on KAITO?"
+    }
+  ]
+}

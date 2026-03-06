@@ -1,0 +1,27 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agent-framework==1.0.0rc1",
+    "agent-framework-redis==1.0.0b260219",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.39.1",
+    "requests>=2.32.5",
+    "fastapi>=0.129.0",
+    "uvicorn[standard]>=0.41.0",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.1",
+    "redis>=7.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.1",
+    "debugpy>=1.8.20",
+    "pytest>=9.0.2",
+]
+
+[tool.uv]
+prerelease = "allow"

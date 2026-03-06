@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/**
+ * Design Token System
+ * 
+ * This file contains all design tokens for the application.
+ * To change the color scheme, update the CSS variables in :root.
+ * All components use these variables, so changes cascade automatically.
+ * 
+ * Color Scheme: Retro Cyberpunk (Dark Black/Gray + Neon Accents)
+ * - Background: Pure black with dark purple and gray gradients
+ * - Accents: Neon green, pink, yellow (orange-y), and cyan
+ * - User messages: Purple with pink border
+ * - Agent messages: Dark gray with cyan border
+ */
+
+:root {
+  /* Base colors */
+  --background: #000000;
+  --foreground: #e0e0e0;
+
+  /* Neon colors - Change these to customize the color scheme */
+  --neon-green: #00ff41;
+  --neon-pink: #ff006e;
+  --neon-yellow: #ffaa00;
+  --neon-cyan: #00ffff;
+
+  /* Neon RGB values for rgba usage */
+  --neon-green-rgb: 0, 255, 65;
+  --neon-pink-rgb: 255, 0, 110;
+  --neon-yellow-rgb: 255, 170, 0;
+  --neon-cyan-rgb: 0, 255, 255;
+
+  /* Purple tones */
+  --purple-dark: #1a0033;
+  --purple-mid: #2d1b4e;
+
+  /* Grays */
+  --gray-darker: #0a0a0a;
+  --gray-dark: #1a1a1a;
+  --gray-mid: #2a2a2a;
+  --gray-light: #404040;
+  --gray-border: #6b7280;
+
+  /* Semantic colors - Error styling with neon red/pink theme */
+  --error-bg: #2a0a0a;
+  --error-border: #ff006e;
+  --error-text: #ff006e;
+  --error-glow-rgb: 255, 0, 110;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-neon-green: var(--neon-green);
+  --color-neon-pink: var(--neon-pink);
+  --color-neon-yellow: var(--neon-yellow);
+  --color-neon-cyan: var(--neon-cyan);
+  --color-purple-dark: var(--purple-dark);
+  --color-purple-mid: var(--purple-mid);
+  --color-gray-darker: var(--gray-darker);
+  --color-gray-dark: var(--gray-dark);
+  --color-gray-mid: var(--gray-mid);
+  --color-gray-light: var(--gray-light);
+  --color-gray-border: var(--gray-border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-press-start: var(--font-press-start);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #000000;
+    --foreground: #e0e0e0;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Chat animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.pixelize {
+  image-rendering: pixelated;
+  filter: contrast(1.2) saturate(1.3) brightness(0.9);
+}
+
+/* Neon glow effects */
+.neon-glow-green {
+  text-shadow: 0 0 20px rgba(var(--neon-green-rgb), 0.8);
+}
+
+.neon-glow-pink {
+  text-shadow: 0 0 10px rgba(var(--neon-pink-rgb), 0.6);
+}
+
+.neon-glow-yellow {
+  text-shadow: 0 0 10px rgba(var(--neon-yellow-rgb), 0.8);
+}
+
+.neon-shadow-green {
+  box-shadow: 0 0 15px rgba(var(--neon-green-rgb), 0.5);
+}
+
+.neon-shadow-pink {
+  box-shadow: 0 0 15px rgba(var(--neon-pink-rgb), 0.4);
+}
+
+.neon-shadow-cyan {
+  box-shadow: 0 0 15px rgba(var(--neon-cyan-rgb), 0.3);
+}
+
+.neon-shadow-yellow {
+  box-shadow: 0 0 15px rgba(var(--neon-yellow-rgb), 0.5);
+}
+
+.neon-shadow-pink-subtle {
+  box-shadow: 0 0 8px rgba(var(--neon-pink-rgb), 0.3);
+}
+
+/* Component-specific styles */
+.header-border {
+  box-shadow: 0 4px 20px rgba(var(--neon-pink-rgb), 0.3);
+}
+
+.input-border {
+  box-shadow: 0 -4px 20px rgba(var(--neon-green-rgb), 0.2);
+}
+
+.chat-textarea {
+  min-height: 44px;
+  max-height: 120px;
+}
+
+/* Semantic component classes */
+.chat-header {
+  border-color: var(--neon-pink);
+  background-color: var(--background);
+}
+
+.chat-title {
+  color: var(--neon-green);
+}
+
+.chat-subtitle {
+  color: var(--neon-pink);
+}
+
+.clear-button {
+  background-color: var(--neon-yellow);
+  border-color: var(--neon-yellow);
+  color: var(--background);
+}
+
+.clear-button:hover {
+  background-color: rgba(var(--neon-yellow-rgb), 0.9);
+}
+
+.message-bubble-user {
+  background-color: var(--purple-mid);
+  border-color: var(--neon-pink);
+  color: white;
+}
+
+.message-bubble-agent {
+  background-color: var(--gray-dark);
+  border-color: var(--neon-cyan);
+  color: #e5e7eb;
+}
+
+.agent-name {
+  color: var(--neon-yellow);
+}
+
+.inline-code {
+  background-color: var(--gray-mid);
+  color: var(--neon-pink);
+  border-color: rgba(var(--neon-pink-rgb), 0.3);
+}
+
+.chat-input-container {
+  border-color: var(--neon-green);
+  background-color: var(--background);
+}
+
+.chat-textarea-input {
+  border-color: var(--gray-border);
+  background-color: var(--gray-dark);
+  color: white;
+}
+
+.chat-textarea-input:focus {
+  border-color: var(--neon-cyan);
+  --tw-ring-color: var(--neon-cyan);
+}
+
+.send-button {
+  background-color: var(--neon-pink);
+  border-color: var(--neon-pink);
+  color: white;
+}
+
+.send-button:hover {
+  background-color: #cc0058;
+}
+
+.error-container {
+  background-color: var(--error-bg);
+  border-color: var(--error-border);
+  box-shadow: 0 0 15px rgba(var(--error-glow-rgb), 0.4);
+}
+
+.error-text {
+  color: var(--error-text);
+  text-shadow: 0 0 10px rgba(var(--error-glow-rgb), 0.6);
+}
+
+.error-icon {
+  color: var(--error-text);
+  font-size: 1.25rem;
+  text-shadow: 0 0 8px rgba(var(--error-glow-rgb), 0.8);
+}

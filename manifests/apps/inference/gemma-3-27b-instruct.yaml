@@ -1,0 +1,52 @@
+apiVersion: kaito.sh/v1alpha1
+kind: InferenceSet
+metadata:
+  name: gemma-3-27b-instruct
+spec:
+  replicas: 1
+  labelSelector:
+    matchLabels:
+      apps: gemma-3-27b-instruct
+  template:
+    inference:
+      preset:
+        name: gemma-3-27b-instruct
+        presetOptions:
+          modelAccessSecret: hf-token
+    resource:
+      instanceType: Standard_NC24ads_A100_v4
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: gemma-3-27b-instruct
+spec:
+  host: gemma-3-27b-instruct-inferencepool-epp
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      insecureSkipVerify: true
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: gemma-3-27b-instruct
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kaito-gateway
+      sectionName: http
+  rules:
+    - matches:
+        - headers:
+            - type: Exact
+              name: X-Gateway-Model-Name
+              value: gemma-3-27b-instruct
+          path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: gemma-3-27b-instruct-inferencepool
+          group: inference.networking.k8s.io
+          kind: InferencePool

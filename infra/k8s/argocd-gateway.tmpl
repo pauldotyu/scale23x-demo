@@ -1,0 +1,26 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: argocd-gateway
+  namespace: argocd
+  annotations:
+    cert-manager.io/issuer: letsencrypt-production
+spec:
+  gatewayClassName: istio
+  infrastructure:
+    annotations:
+      service.beta.kubernetes.io/port_80_health-probe_protocol: tcp
+      service.beta.kubernetes.io/port_443_health-probe_protocol: tcp
+      service.beta.kubernetes.io/port_15021_health-probe_protocol: tcp
+  listeners:
+    - protocol: HTTPS
+      port: 443
+      name: https
+      hostname: "argocd.${DNS_NAME}"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: argocd-tls

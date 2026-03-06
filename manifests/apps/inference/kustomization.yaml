@@ -1,0 +1,5 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - phi-4-mini-instruct.yaml
+  - gemma-3-27b-instruct.yaml

@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  redis.conf: |
+    bind 0.0.0.0
+    protected-mode no
+    port 6379
+    save 900 1
+    save 300 10
+    save 60 10000
+    appendonly yes
+    appendfsync everysec
+    maxmemory-policy allkeys-lru
+    timeout 300
+    tcp-keepalive 300
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8.2.2
+          ports:
+            - name: redis
+              containerPort: 6379
+          command:
+            - redis-server
+            - /usr/local/etc/redis/redis.conf
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          volumeMounts:
+            - name: redis-config
+              mountPath: /usr/local/etc/redis
+              readOnly: true
+      volumes:
+        - name: redis-config
+          configMap:
+            name: redis-config
+---
+# Service to expose Redis
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  type: ClusterIP
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-commander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-commander
+  template:
+    metadata:
+      labels:
+        app: redis-commander
+    spec:
+      containers:
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
+        env:
+        - name: REDIS_HOSTS
+          value: "local:redis:6379"
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-commander
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8081
+      protocol: TCP
+  selector:
+    app: redis-commander
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: redisinsight # deployment name
+#   labels:
+#     app: redisinsight # deployment label
+# spec:
+#   replicas: 1 # a single replica pod
+#   selector:
+#     matchLabels:
+#       app: redisinsight # which pods is the deployment managing, as defined by the pod template
+#   template: # pod template
+#     metadata:
+#       labels:
+#         app: redisinsight # label for pod/s
+#     spec:
+#       containers:
+#       - name: redisinsight # Container name (DNS_LABEL, unique)
+#         image: redis/redisinsight:latest # repo/image
+#         imagePullPolicy: IfNotPresent # Always pull image
+#         env:
+#           # If there's a service named 'redisinsight' that exposes the
+#           # deployment, we manually set `RI_APP_HOST` and
+#           # `RI_APP_PORT` to override the service environment
+#           # variables.
+#           - name: RI_APP_HOST
+#             value: "0.0.0.0"
+#           - name: RI_APP_PORT
+#             value: "5540"
+#         volumeMounts:
+#         - name: redisinsight # Pod volumes to mount into the container's filesystem. Cannot be updated.
+#           mountPath: /data
+#         ports:
+#         - containerPort: 5540 # exposed container port and protocol
+#           protocol: TCP
+#         livenessProbe: # Probe to check container health
+#           httpGet:
+#             path: /healthcheck/ # exposed RI endpoint for healthcheck
+#             port: 5540 # exposed container port
+#           initialDelaySeconds: 5 # number of seconds to wait after the container starts to perform liveness probe
+#           periodSeconds: 5 # period in seconds after which liveness probe is performed
+#           failureThreshold: 1 # number of liveness probe failures after which container restarts
+#       volumes:
+#       - name: redisinsight
+#         emptyDir: {} # node-ephemeral volume https://kubernetes.io/docs/concepts/storage/volumes/#emptydir
+

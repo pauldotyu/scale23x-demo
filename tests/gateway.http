@@ -1,0 +1,59 @@
+### Test a phi-4-mini-instruct workspace behind istio gateway
+POST /v1/chat/completions
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "max_tokens": 100,
+  "model": "phi-4-mini-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user", 
+      "content": "Tell me everything I need to know about the SCaLE conference."
+    }
+  ]
+}
+
+### Test a gemma-3-27b-instruct workspace behind istio gateway
+POST /v1/chat/completions
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "max_tokens": 100,
+  "model": "gemma-3-27b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user", 
+      "content": "Tell me everything I need to know about the SCaLE conference."
+    }
+  ]
+}
+
+### Ask a follow up question to the gemma-3-27b-instruct workspace behind istio gateway
+POST /v1/chat/completions
+Host: localhost:5000
+Content-Type: application/json
+
+{
+  "max_tokens": 100,
+  "model": "gemma-3-27b-instruct",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant knowledgeable about the SCaLE conference."
+    },
+    {
+      "role": "user", 
+      "content": "Will there be any sessions on KAITO at the SCaLE conference?"
+    }
+  ]
+}

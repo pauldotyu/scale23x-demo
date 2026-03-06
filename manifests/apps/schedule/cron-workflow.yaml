@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: schedule-index
+spec:
+  podGC:
+    strategy: OnWorkflowCompletion
+  timezone: "America/Los_Angeles"
+  schedules:
+    - "30 14 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  workflowSpec:
+    workflowTemplateRef:
+      name: schedule-index-pipeline

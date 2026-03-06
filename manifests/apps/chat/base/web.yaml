@@ -1,0 +1,181 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kaito-gateway
+      sectionName: https
+  rules:
+    - backendRefs:
+        - name: web
+          port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: web
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      steps:
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 50
+        - pause: { duration: 10 }
+        - setWeight: 100
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/pauldotyu/scale23x-demo/web:0.1.0-beta
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: web-env
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          startupProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2
+      restartPolicy: Always
+# ---
+# apiVersion: keda.sh/v1alpha1
+# kind: ScaledObject
+# metadata:
+#   name: web-scaledobject
+# spec:
+#   scaleTargetRef:
+#     name: web
+#   minReplicaCount: 3
+#   maxReplicaCount: 110
+#   pollingInterval: 10
+#   cooldownPeriod: 120
+#   idleReplicaCount: 2
+#   advanced:
+#     restoreToOriginalReplicaCount: false
+#     horizontalPodAutoscalerConfig:
+#       behavior:
+#         scaleDown:
+#           stabilizationWindowSeconds: 120
+#           policies:
+#             - type: Percent
+#               value: 25
+#               periodSeconds: 60
+#             - type: Pods
+#               value: 2
+#               periodSeconds: 90
+#           selectPolicy: Min
+#         scaleUp:
+#           stabilizationWindowSeconds: 0
+#           policies:
+#             - type: Percent
+#               value: 100
+#               periodSeconds: 15
+#             - type: Pods
+#               value: 5
+#               periodSeconds: 15
+#           selectPolicy: Max
+#   triggers:
+#     # CPU-based scaling for Next.js SSR and rendering
+#     - type: cpu
+#       metricType: Utilization
+#       metadata:
+#         value: "75"
+#     # Memory-based scaling for Node.js runtime and caching
+#     - type: memory
+#       metricType: Utilization
+#       metadata:
+#         value: "85"
+#     # Prometheus metrics for HTTP request rate
+#     # Uncomment when Prometheus is available with web metrics
+#     # - type: prometheus
+#     #   metadata:
+#     #     serverAddress: http://prometheus.default.svc:9090
+#     #     metricName: web_http_requests_per_second
+#     #     threshold: "100"
+#     #     query: |
+#     #       rate(http_requests_total{job="web"}[1m])
+# ---
+# apiVersion: autoscaling.k8s.io/v1
+# kind: VerticalPodAutoscaler
+# metadata:
+#   name: web-vpa
+# spec:
+#   targetRef:
+#     apiVersion: "apps/v1"
+#     kind: Deployment
+#     name: web
+#   updatePolicy:
+#     updateMode: "Recreate"  # Recreate pods with updated resources
+#   resourcePolicy:
+#     containerPolicies:
+#       - containerName: web
+#         mode: Auto
+#         minAllowed:
+#           cpu: 100m
+#           memory: 128Mi
+#         maxAllowed:
+#           cpu: 2000m
+#           memory: 1Gi
+#         controlledResources:
+#           - cpu
+#           - memory
+# ---
+# apiVersion: policy/v1
+# kind: PodDisruptionBudget
+# metadata:
+#   name: web-pdb
+# spec:
+#   minAvailable: 2
+#   selector:
+#     matchLabels:
+#       app: web
+# ---

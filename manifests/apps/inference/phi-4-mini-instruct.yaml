@@ -1,0 +1,50 @@
+apiVersion: kaito.sh/v1alpha1
+kind: InferenceSet
+metadata:
+  name: phi-4-mini-instruct
+spec:
+  replicas: 1
+  labelSelector:
+    matchLabels:
+      apps: phi-4-mini-instruct
+  template:
+    inference:
+      preset:
+        name: phi-4-mini-instruct
+    resource:
+      instanceType: Standard_NV36ads_A10_v5
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: phi-4-mini-instruct
+spec:
+  host: phi-4-mini-instruct-inferencepool-epp
+  trafficPolicy:
+    tls:
+      mode: SIMPLE
+      insecureSkipVerify: true
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: phi-4-mini-instruct
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kaito-gateway
+      sectionName: http
+  rules:
+    - matches:
+        - headers:
+            - type: Exact
+              name: X-Gateway-Model-Name
+              value: phi-4-mini-instruct
+          path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: phi-4-mini-instruct-inferencepool
+          group: inference.networking.k8s.io
+          kind: InferencePool

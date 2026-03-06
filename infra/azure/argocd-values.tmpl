@@ -1,0 +1,36 @@
+global:
+  domain: argocd.${AZURE_DNS_ZONE_NAME}
+configs:
+  cm:
+    admin.enabled: false
+    oidc.config: |
+      name: Microsoft Entra ID
+      issuer: https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0
+      clientID: ${ARGOCD_APP_CLIENT_ID}
+      azure:
+        useWorkloadIdentity: true
+      requestedIDTokenClaims:
+        groups:
+          essential: true
+      requestedScopes:
+        - openid
+        - profile
+        - email
+  rbac:
+    policy.csv: |
+      g, "${ADMIN_OBJECT_ID}", role:admin
+  params:
+    server.insecure: "true"
+%{ if SSH_PRIVATE_KEY != "" }
+  repositories:
+    scale23x-demo:
+      url: git@github.com:pauldotyu/scale23x-demo.git
+      sshPrivateKey: |
+        ${indent(8, SSH_PRIVATE_KEY)}
+%{ endif }
+server:
+  podLabels:
+    azure.workload.identity/use: "true"
+  serviceAccount:
+    annotations:
+      azure.workload.identity/client-id: ${ARGOCD_APP_CLIENT_ID}

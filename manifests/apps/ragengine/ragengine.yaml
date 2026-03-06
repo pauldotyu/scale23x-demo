@@ -1,0 +1,40 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: scale23x
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: kaito-gateway
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /rag
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /v1
+      backendRefs:
+        - name: scale23x
+          port: 80
+---
+apiVersion: kaito.sh/v1alpha1
+kind: RAGEngine
+metadata:
+  name: scale23x
+spec:
+  compute:
+    instanceType: Standard_NC4as_T4_v3
+    labelSelector:
+      matchLabels:
+        apps: scale23x
+  embedding:
+    local:
+      modelID: BAAI/bge-small-en-v1.5
+  inferenceService:
+    url: http://kaito-gateway-istio/v1/chat/completions
+    contextWindowSize: 131072

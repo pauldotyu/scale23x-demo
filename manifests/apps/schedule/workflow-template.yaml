@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: schedule-index-pipeline
+spec:
+  arguments:
+    parameters:
+      - name: ragengine-host
+        value: scale23x
+  entrypoint: index-pipeline
+  volumeClaimTemplates:
+    - metadata:
+        name: workdir
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Mi
+  templates:
+    - name: index-pipeline
+      steps:
+        - - name: download
+            template: download-and-parse-schedule
+        - - name: format
+            template: format-schedule-for-rag
+        - - name: index
+            template: upload-index-to-rag
+    - name: download-and-parse-schedule
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
+      container:
+        image: sched:latest
+        imagePullPolicy: Always
+        args: ["parse_schedule.py"]
+        volumeMounts:
+          - name: workdir
+            mountPath: /app/output
+    - name: format-schedule-for-rag
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
+      container:
+        image: sched:latest
+        imagePullPolicy: Always
+        args: ["format_schedule.py"]
+        volumeMounts:
+          - name: workdir
+            mountPath: /app/output
+    - name: upload-index-to-rag
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+        runAsGroup: 1001
+      container:
+        image: curlimages/curl:8.16.0
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            set -e
+
+            echo "Checking for schedule_index.json..."
+            if [ ! -f /app/output/schedule_index.json ]; then
+              echo "ERROR: /app/output/schedule_index.json not found!"
+              ls -la /app/output/
+              exit 1
+            fi
+
+            echo "File found. Contents:"
+            head -n 20 /app/output/schedule_index.json
+
+            echo "Uploading to RAGEngine at http://{{workflow.parameters.ragengine-host}}/index..."
+            curl -v -X POST http://{{workflow.parameters.ragengine-host}}/index \
+              -H "Content-Type: application/json" \
+              -d @/app/output/schedule_index.json && echo "Upload complete!"
+        volumeMounts:
+          - name: workdir
+            mountPath: /app/output
